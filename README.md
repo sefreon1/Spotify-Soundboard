@@ -1,6 +1,10 @@
 # Spotify Soundboard
 
-Ett soundboard med 30 knappar per flik och 10 flikar (300 låtar totalt) som laddas från en Spotify-spellista. Varje knapp är en låt, och du kan sätta en startpunkt (cue) per låt. Appen är en enda fil (`index.html`) som körs i webbläsaren, och ljudet spelas av Spotify-appen.
+Ett soundboard med 30 knappar per flik och 10 flikar (300 låtar totalt) som laddas från en Spotify-spellista. Varje knapp är en låt, och du kan sätta en startpunkt (cue) per låt. Appen är en enda sida som körs i webbläsaren, och ljudet spelas av Spotify-appen.
+
+**Öppna appen:** https://sefreon1.github.io/Spotify-Soundboard/
+
+Du behöver inte installera något eller ladda ner någon fil. Öppna länken i Chrome på plattan, telefonen eller datorn och följ stegen nedan.
 
 ## Krav
 
@@ -9,26 +13,13 @@ Ett soundboard med 30 knappar per flik och 10 flikar (300 låtar totalt) som lad
 - **Spotify-appen** installerad och inloggad på samma konto på den enhet som ska spela.
 - En spellista som **du själv äger** (Spotify lämnar bara ut innehållet för egna spellistor).
 
----
+## Så fungerar det med dina uppgifter
 
-## Del 1: Lägg appen på GitHub Pages
-
-1. Skapa ett repo på GitHub, till exempel `Spotify-Soundboard`.
-2. Ladda upp `index.html` (och den här filen) till repot: **Add file → Upload files → Commit changes**.
-3. Gå till **Settings → Pages**. Under *Build and deployment* väljer du **Deploy from a branch**, branch **main** och mapp **/ (root)**, och trycker **Save**.
-4. Efter 1–2 minuter ligger appen på:
-
-   ```
-   https://DITT-ANVÄNDARNAMN.github.io/Spotify-Soundboard/
-   ```
-
-   Exempel: `https://sefreon1.github.io/Spotify-Soundboard/`
-
-   Det här är din **Redirect URI**. Du behöver den exakt som den står, med snedstreck på slutet, i nästa del.
+Varje användare skapar **sin egen Spotify-app** (del 1 nedan) och får ett eget **Client ID**. Det beror på att Spotify begränsar en app i utvecklarläge till högst 5 användare. Du lägger in ditt Client ID i soundboardet, och det sparas bara i din egen webbläsare. Sidan på GitHub är bara en fil och sparar ingenting om dig. Ditt Client ID är inte hemligt, men dela det ändå inte med andra.
 
 ---
 
-## Del 2: Skapa en Spotify-app och hämta Client ID
+## Del 1: Skapa en Spotify-app och hämta Client ID
 
 Du behöver ett **Client ID** från Spotify. Det är ett långt id som identifierar din app. Du behöver **inget Client Secret**.
 
@@ -39,8 +30,8 @@ Du behöver ett **Client ID** från Spotify. Det är ett långt id som identifie
 3. Fyll i formuläret:
    - **App name:** `Soundboard` (valfritt namn)
    - **App description:** `Soundboard för spellista` (valfri text)
-   - **Website:** lämna tomt (eller skriv din GitHub Pages-adress)
-   - **Redirect URIs:** klistra in din adress från del 1, till exempel
+   - **Website:** lämna tomt
+   - **Redirect URIs:** skriv in exakt
      `https://sefreon1.github.io/Spotify-Soundboard/`
      och tryck **Add** så att den hamnar i listan under fältet.
      Adressen måste stämma tecken för tecken, inklusive `https://` och snedstrecket sist.
@@ -49,16 +40,16 @@ Du behöver ett **Client ID** från Spotify. Det är ett långt id som identifie
 4. Tryck **Save**.
 5. Du hamnar på appens sida. Tryck **Settings** (uppe till höger).
 6. Under **Basic Information** hittar du **Client ID**. Det är en lång rad med bokstäver och siffror. Tryck för att markera och **kopiera** den.
-7. Gå till fliken **User Management** och lägg till ditt eget Spotify-konto (namn och den e-postadress du använder på Spotify) om det inte redan finns. Spotify tillåter högst **5 användare** för en app i utvecklarläge, vilket räcker för eget bruk.
+7. Gå till fliken **User Management** och lägg till ditt eget Spotify-konto (namn och den e-postadress du använder på Spotify) om det inte redan finns.
 
 ---
 
-## Del 3: Fyll i Client ID i appen och logga in
+## Del 2: Fyll i Client ID i appen och logga in
 
-1. Öppna din adress (`https://DITT-ANVÄNDARNAMN.github.io/Spotify-Soundboard/`) i Chrome på plattan eller telefonen. Inställningsrutan öppnas automatiskt första gången. Annars trycker du på **⚙**.
+1. Öppna **https://sefreon1.github.io/Spotify-Soundboard/** i Chrome. Inställningsrutan öppnas automatiskt första gången. Annars trycker du på **⚙**.
 2. Under **1. Spotify-inloggning**:
    - Klistra in **Client ID** som du kopierade i fältet "Client ID".
-   - Kontrollera att **Redirect URI** som visas i rutan är exakt samma som den du la in i Spotify-appen. Är den inte det, ändra i Spotify-appen så att den stämmer.
+   - Kontrollera att **Redirect URI** som visas i rutan är exakt samma som den du la in i Spotify-appen.
    - Tryck **Logga in med Spotify**.
 3. Spotify frågar om du vill ge appen åtkomst. Tryck **Godkänn** (Agree). Du skickas tillbaka till soundboardet och ser **● Inloggad**.
 4. Under **2. Spellista**: tryck **Hämta mina**, välj spellistan i listan (eller klistra in länken till den) och tryck **Ladda in i soundboardet**.
@@ -113,12 +104,25 @@ Client ID och inloggning sparas på enheten. Du behöver bara göra det här en 
 
 | Meddelande eller problem | Lösning |
 |---|---|
-| `INVALID_CLIENT: Invalid redirect URI` vid inloggning | Redirect URI i Spotify-appen stämmer inte exakt med den som visas i ⚙. Kontrollera `https://`, användarnamn, repo-namn och snedstrecket sist, och tryck **Save** igen. |
+| `INVALID_CLIENT: Invalid redirect URI` vid inloggning | Redirect URI i din Spotify-app stämmer inte exakt med den som visas i ⚙. Kontrollera `https://`, användarnamn, repo-namn och snedstrecket sist, och tryck **Save** igen. |
 | *Ingen aktiv enhet* | Öppna Spotify-appen på enheten, spela en låt en sekund, och tryck **Uppdatera** under *3. Spelare* i ⚙ och välj enheten. |
 | Enheten syns inte i listan | Kontrollera att Spotify-appen är inloggad på samma konto, inte i offline-läge, och starta om den. |
-| *Spotify nekade (403)* | Kontot saknas under **User Management** i Spotify-appen, eller så har ägarkontot inte Premium. |
+| *Spotify nekade (403)* | Kontot saknas under **User Management** i din Spotify-app, eller så har ägarkontot inte Premium. |
 | *Premium krävs* | Uppspelningsstyrning kräver Spotify Premium. |
 | *För många anrop* (429) | Vänta en stund och försök igen. |
 | Inga låtar laddas | Spellistan måste ägas av dig. Prova att välja den i listan under **Hämta mina**. |
-| Ändringar syns inte efter uppdatering | GitHub Pages cachar. Vänta 1–2 minuter och öppna adressen med `?v=2` sist. |
+| Ändringar syns inte efter uppdatering | Webbläsaren cachar. Vänta 1–2 minuter och öppna adressen med `?v=2` sist. |
 | Logga in igen | ⚙ → **Logga ut** och sedan **Logga in med Spotify**. |
+
+---
+
+## Valfritt: egen kopia av appen
+
+Du behöver bara det här om du vill köra en egen version, till exempel för att ändra koden.
+
+1. Gör en kopia (Fork) av repot på GitHub, eller skapa ett nytt repo och ladda upp `index.html`.
+2. Gå till **Settings → Pages**, välj **Deploy from branch**, branch **main**, mapp **/ (root)** och tryck **Save**.
+3. Efter 1–2 minuter ligger appen på `https://DITT-ANVÄNDARNAMN.github.io/REPO-NAMN/`.
+4. Använd den adressen (med snedstreck på slutet) som **Redirect URI** i din Spotify-app i del 1 i stället för adressen ovan.
+
+Appen går inte att köra genom att öppna `index.html` direkt från mappen på datorn, eftersom Spotify kräver en `https://`-adress för inloggningen.
