@@ -40,7 +40,11 @@ header.live{box-shadow:0 6px 30px -10px #3b6cff88}
 /* ---------- Flikar + verktyg ---------- */
 .tabs{display:flex;gap:7px;padding:9px 12px 6px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:1 0 auto;min-width:44px;height:40px;border-radius:12px;background:#121a2b;border:1px solid var(--line);font-weight:800;font-size:16px;color:#9fb0d6;position:relative}
+.tab{flex:1 0 auto;min-width:44px;height:40px;padding:0 12px;border-radius:12px;background:#121a2b;border:1px solid var(--line);font-weight:800;font-size:16px;color:#9fb0d6;position:relative;white-space:nowrap}
+.tab.named{font-size:14px;padding:0 16px 0 12px}
+.tab .tn{opacity:.55;font-size:11px;margin-right:6px;font-weight:700}
+.tab .nm{display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+body.edit .tab{border:2px dashed #ffd36b}
 .tab.active{background:linear-gradient(145deg,var(--green1),var(--green2));color:#03210f;border-color:transparent;box-shadow:0 4px 18px -4px #2ee17399}
 .tab.dim{opacity:.35}
 .tab .dot{position:absolute;top:5px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--blue1);box-shadow:0 0 8px var(--blue1)}
@@ -203,6 +207,19 @@ code{background:#080c16;border:1px solid var(--line);border-radius:6px;padding:2
   <button class="btn" id="bClose">Stäng</button>
 </div></dialog>
 
+<!-- Flik-namn -->
+<dialog id="dTab"><div class="dlg">
+  <h2 id="tTitle">Namn på flik</h2>
+  <div>
+    <label for="tIn">Namn (lämna tomt för bara siffra)</label>
+    <input id="tIn" maxlength="24" autocomplete="off" placeholder="t.ex. Uppvärmning">
+  </div>
+  <div class="row">
+    <button class="btn primary" id="tSave">Spara</button>
+    <button class="btn" id="tClose">Avbryt</button>
+  </div>
+</div></dialog>
+
 <!-- Cue-dialog -->
 <dialog id="dCue"><div class="dlg">
   <h2 id="cTitle">Cue</h2>
@@ -292,6 +309,8 @@ const S={
   cues:LS.get('sb_cues',{}),           // uri -> ms
   deviceId:LS.get('sb_device',''),
   tab:LS.get('sb_tab',0),
+  tabNames:LS.get('sb_tabnames',[]),   // 10 st namn, tom sträng = bara siffra
+  tabEdit:-1,
   playingIdx:-1, playingUri:'', nextIdx:-1, played:new Set(),
   startPos:0, startedAt:0, durs:{}, seq:0,
   edit:false, pollTimer:null, endTimer:null, cueIdx:-1
@@ -593,10 +612,17 @@ function renderTabs(){
   const nav=$('tabs'); nav.innerHTML='';
   for(let t=0;t<TABS;t++){
     const b=document.createElement('button');
-    b.className='tab'+(t===S.tab?' active':'')+(S.tracks.length<=t*PER_TAB?' dim':'');
-    b.textContent=String(t+1); b.dataset.tab=t;
+    const nm=(S.tabNames[t]||'').trim();
+    b.className='tab'+(t===S.tab?' active':'')+(S.tracks.length<=t*PER_TAB?' dim':'')+(nm?' named':'');
+    b.dataset.tab=t;
+    if(nm){
+      const n=document.createElement('span'); n.className='tn'; n.textContent=String(t+1);
+      const x=document.createElement('span'); x.className='nm'; x.textContent=nm;
+      b.append(n,x);
+    } else b.textContent=String(t+1);
     if(S.playingIdx>=0&&tabOf(S.playingIdx)===t){ const d=document.createElement('i'); d.className='dot'; b.appendChild(d); }
     b.onclick=()=>{
+      if(S.edit){ openTabName(t); return; }       // i redigeringsläge: döp fliken
       S.tab=t; LS.set('sb_tab',t);
       resetTab();                                  // byter man flik blir alla låtar gröna
       renderTabs(); renderGrid(); refresh();
@@ -640,6 +666,20 @@ function refresh(){
     if(!has&&dot) dot.remove();
   });
 }
+function openTabName(t){
+  S.tabEdit=t;
+  $('tTitle').textContent='Namn på flik '+(t+1);
+  $('tIn').value=S.tabNames[t]||'';
+  $('dTab').showModal();
+  setTimeout(()=>{ try{ $('tIn').focus(); $('tIn').select(); }catch(e){} },50);
+}
+function tabNameSave(){
+  const t=S.tabEdit; if(t<0) return;
+  S.tabNames[t]=$('tIn').value.trim().slice(0,24);
+  for(let k=0;k<TABS;k++) if(typeof S.tabNames[k]!=='string') S.tabNames[k]='';
+  LS.set('sb_tabnames',S.tabNames);
+  $('dTab').close(); renderTabs(); refresh();
+}
 function updateLoginState(){
   const el=$('loginState');
   if(isLoggedIn()){ el.innerHTML='<span class="ok">● Inloggad</span>'; }
@@ -652,7 +692,7 @@ $('bStop').onclick=stopNow;
 $('bFade').onclick=fadeStop;
 $('bReset').onclick=()=>{ resetTab(); toast('Alla låtar i flik '+(S.tab+1)+' är gröna'); };
 $('bCue').onclick=setCueHere;
-$('bEdit').onclick=()=>{ S.edit=!S.edit; document.body.classList.toggle('edit',S.edit); $('bEdit').classList.toggle('on',S.edit); toast(S.edit?'Redigera: tryck en knapp för att ställa in cue':'Spelläge'); };
+$('bEdit').onclick=()=>{ S.edit=!S.edit; document.body.classList.toggle('edit',S.edit); $('bEdit').classList.toggle('on',S.edit); toast(S.edit?'Redigera: tryck en låt för cue, tryck en flik för att döpa den':'Spelläge'); };
 $('bSet').onclick=()=>{ $('clientId').value=S.clientId; $('redir').textContent=REDIRECT; updateLoginState(); $('dSet').showModal(); };
 $('bClose').onclick=()=>$('dSet').close();
 $('bLogin').onclick=login;
@@ -662,15 +702,24 @@ $('bLoad').onclick=loadPlaylist;
 $('bDev').onclick=loadDevices;
 $('devSel').onchange=e=>{ S.deviceId=e.target.value; LS.set('sb_device',S.deviceId); };
 $('plSel').onchange=()=>{ $('plIn').value=''; };
-$('bExp').onclick=()=>{ $('cueBox').value=JSON.stringify(S.cues); $('cueBox').select(); toast('Kopiera texten och spara den någonstans'); };
+$('bExp').onclick=()=>{ $('cueBox').value=JSON.stringify({cues:S.cues,tabs:S.tabNames}); $('cueBox').select(); toast('Kopiera texten och spara den någonstans'); };
 $('bImp').onclick=()=>{
   try{
     const o=JSON.parse($('cueBox').value);
     if(!o||typeof o!=='object'||Array.isArray(o)) throw new Error('fel format');
-    let n=0; for(const k in o){ if(typeof o[k]==='number'&&o[k]>=0){ S.cues[k]=o[k]; n++; } }
-    LS.set('sb_cues',S.cues); renderGrid(); toast(n+' cue-punkter importerade');
+    const cues=(o.cues&&typeof o.cues==='object')?o.cues:o;          // stöder även gammalt format
+    let n=0; for(const k in cues){ if(typeof cues[k]==='number'&&cues[k]>=0){ S.cues[k]=cues[k]; n++; } }
+    LS.set('sb_cues',S.cues);
+    if(Array.isArray(o.tabs)){
+      S.tabNames=Array.from({length:TABS},(_,k)=>typeof o.tabs[k]==='string'?o.tabs[k].slice(0,24):'');
+      LS.set('sb_tabnames',S.tabNames);
+    }
+    renderTabs(); renderGrid(); toast(n+' cue-punkter importerade'+(Array.isArray(o.tabs)?' + flik-namn':''));
   }catch(e){ toast('Kunde inte läsa importen: '+e.message,true); }
 };
+$('tSave').onclick=tabNameSave;
+$('tClose').onclick=()=>$('dTab').close();
+$('tIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); tabNameSave(); } });
 $('cSave').onclick=cueSave;
 $('cClose').onclick=()=>$('dCue').close();
 $('cClear').onclick=()=>{ $('cIn').value=''; cueSave(); };
