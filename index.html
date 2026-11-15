@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0f1115">
+<title>Spotify Soundboard</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --line:#262b36; --text:#e8ebf1; --muted:#8b93a5;
+  --green:#1ed760; --green-d:#14883f; --amber:#f5b942; --red:#ef5350; --pad:#1d222d; --pad-h:#252b39;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
+body{display:flex;flex-direction:column;height:100dvh;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+.now{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.now b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctl{display:flex;gap:6px;flex-wrap:wrap}
+.btn{background:var(--pad);border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:14px;font-weight:600}
+.btn:active{background:var(--pad-h)}
+.btn.stop{background:#3a1d1f;border-color:#5a2a2d}
+.btn.fade{background:#2e2a18;border-color:#4a4224}
+.btn.on{background:var(--green-d);border-color:var(--green)}
+.btn.primary{background:var(--green);color:#06210f;border-color:var(--green)}
+.tabs{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--line)}
+.tab{flex:1 0 auto;min-width:46px;padding:9px 0;border-radius:10px;background:var(--pad);border:1px solid var(--line);text-align:center;font-weight:700;position:relative}
+.tab.active{background:var(--green);color:#06210f;border-color:var(--green)}
+.tab.dim{opacity:.4}
+.tab .dot{position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--amber)}
+.tab.active .dot{background:#06210f}
+main{flex:1;min-height:0;padding:10px;overflow:auto}
+.grid{display:grid;gap:8px;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(74px,1fr);min-height:100%}
+@media (min-width:640px){.grid{grid-template-columns:repeat(5,1fr)}}
+@media (min-width:980px){.grid{grid-template-columns:repeat(6,1fr)}}
+.pad{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;
+  background:var(--pad);border:1px solid var(--line);border-radius:12px;padding:8px 10px 8px 10px;overflow:hidden;min-width:0}
+.pad:active{background:var(--pad-h)}
+.pad .n{position:absolute;top:4px;right:7px;font-size:10px;color:var(--muted)}
+.pad .t{font-weight:700;font-size:14px;line-height:1.15;width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.pad .a{font-size:11px;color:var(--muted);margin-top:3px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pad .c{position:absolute;bottom:4px;right:7px;font-size:10px;font-weight:700;color:var(--amber)}
+.pad.empty{opacity:.28;pointer-events:none}
+.pad.playing{background:var(--green-d);border-color:var(--green);box-shadow:0 0 0 2px var(--green) inset}
+.pad.playing .a{color:#c9f5d8}
+body.edit .pad:not(.empty){border-style:dashed;border-color:var(--amber)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:92vw;background:#000c;border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;text-align:center;backdrop-filter:blur(6px)}
+.toast.show{opacity:1}
+.toast.err{border-color:var(--red);color:#ffd2d1}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:0;width:min(560px,94vw);max-height:92dvh}
+dialog::backdrop{background:#000a}
+.dlg{padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto;max-height:90dvh;user-select:text;-webkit-user-select:text}
+.dlg h2{margin:0;font-size:18px}
+.dlg h3{margin:6px 0 0;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dlg label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+.dlg input,.dlg select,.dlg textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:15px}
+.dlg textarea{min-height:90px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 auto}
+.small{font-size:12px;color:var(--muted);line-height:1.45}
+code{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 5px;font-size:12px;word-break:break-all;user-select:all;-webkit-user-select:all}
+.ok{color:var(--green)} .bad{color:var(--red)}
+</style>
+</head>
+<body>
+<header>
+  <div class="now"><b id="nowTitle">Inte ansluten</b><span id="nowSub">Öppna ⚙ för att komma igång</span></div>
+  <div class="ctl">
+    <button class="btn stop" id="bStop">■ Stopp</button>
+    <button class="btn fade" id="bFade">↘ Fade</button>
+    <button class="btn" id="bCue">⏱ Sätt cue här</button>
+    <button class="btn" id="bEdit">✎ Redigera</button>
+    <button class="btn" id="bSet">⚙</button>
+  </div>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<main><div class="grid" id="grid"></div></main>
+<div class="toast" id="toast"></div>
+
+<!-- Inställningar -->
+<dialog id="dSet"><div class="dlg">
+  <h2>Inställningar</h2>
+
+  <h3>1. Spotify-inloggning</h3>
+  <div>
+    <label for="clientId">Client ID (från Spotify Developer Dashboard)</label>
+    <input id="clientId" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="t.ex. 3f2a9c…">
+  </div>
+  <div class="small">Redirect URI att lägga in i Spotify-appen (kopiera exakt): <code id="redir"></code></div>
+  <div class="row">
+    <button class="btn primary" id="bLogin">Logga in med Spotify</button>
+    <button class="btn" id="bLogout">Logga ut</button>
+  </div>
+  <div class="small" id="loginState"></div>
+
+  <h3>2. Spellista</h3>
+  <div class="row">
+    <select id="plSel"><option value="">— hämta mina spellistor —</option></select>
+    <button class="btn" id="bPl">Hämta mina</button>
+  </div>
+  <div>
+    <label for="plIn">…eller klistra in länk/ID till spellistan</label>
+    <input id="plIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://open.spotify.com/playlist/…">
+  </div>
+  <button class="btn primary" id="bLoad">Ladda in i soundboardet</button>
+  <div class="small" id="plState"></div>
+
+  <h3>3. Spelare (enhet)</h3>
+  <div class="row">
+    <select id="devSel"><option value="">Aktiv enhet</option></select>
+    <button class="btn" id="bDev">Uppdatera</button>
+  </div>
+  <div class="small">Öppna Spotify-appen på plattan och spela något en sekund så att plattan syns här. Välj den och ljudet kommer från Spotify-appen på den enheten.</div>
+
+  <h3>4. Cue-punkter</h3>
+  <div class="small">Cue-punkter sparas per låt på den här enheten. Exportera dem som säkerhetskopia.</div>
+  <div class="row">
+    <button class="btn" id="bExp">Exportera</button>
+    <button class="btn" id="bImp">Importera</button>
+  </div>
+  <textarea id="cueBox" placeholder="Cue-data (JSON) visas här vid export. Klistra in här och tryck Importera."></textarea>
+
+  <button class="btn" id="bClose">Stäng</button>
+</div></dialog>
+
+<!-- Cue-dialog -->
+<dialog id="dCue"><div class="dlg">
+  <h2 id="cTitle">Cue</h2>
+  <div class="small" id="cSub"></div>
+  <div>
+    <label for="cIn">Startpunkt (m:ss eller sekunder, t.ex. 0:42.5)</label>
+    <input id="cIn" inputmode="decimal" autocomplete="off" placeholder="0:00">
+  </div>
+  <div class="row">
+    <button class="btn" data-nudge="-1000">−1 s</button>
+    <button class="btn" data-nudge="-500">−0,5</button>
+    <button class="btn" data-nudge="500">+0,5</button>
+    <button class="btn" data-nudge="1000">+1 s</button>
+  </div>
+  <button class="btn" id="cNow">Använd nuvarande position (om låten spelas)</button>
+  <div class="row">
+    <button class="btn primary" id="cSave">Spara</button>
+    <button class="btn" id="cClear">Nollställ</button>
+    <button class="btn" id="cClose">Stäng</button>
+  </div>
+</div></dialog>
+
+<script>
+"use strict";
+// ==PURE==
+function b64url(bytes){
+  let s=''; const a=new Uint8Array(bytes);
+  for(let i=0;i<a.length;i++) s+=String.fromCharCode(a[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function fmtMs(ms){
+  ms=Math.max(0,Math.round(ms||0));
+  const m=Math.floor(ms/60000), s=(ms%60000)/1000;
+  const str=(Number.isInteger(s)?String(s).padStart(2,'0'):s.toFixed(1).padStart(4,'0'));
+  return m+':'+str;
+}
+function parseTime(str){
+  str=String(str||'').trim().replace(',','.');
+  if(!str) return null;
+  let sec;
+  if(str.includes(':')){
+    const p=str.split(':');
+    if(p.length!==2) return null;
+    const m=parseFloat(p[0]), s=parseFloat(p[1]);
+    if(!isFinite(m)||!isFinite(s)||m<0||s<0) return null;
+    sec=m*60+s;
+  } else {
+    sec=parseFloat(str);
+    if(!isFinite(sec)||sec<0) return null;
+  }
+  return Math.round(sec*1000);
+}
+function parsePlaylistId(input){
+  input=String(input||'').trim();
+  const m=input.match(/playlist[\/:]([A-Za-z0-9]{10,})/);
+  if(m) return m[1];
+  if(/^[A-Za-z0-9]{10,}$/.test(input)) return input;
+  return null;
+}
+function cleanRedirect(origin,pathname){
+  return origin+pathname.replace(/index\.html$/,'');
+}
+// ==/PURE==
+
+const LS={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const SCOPES='playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-playback-state';
+const PER_TAB=30, TABS=10, MAX=PER_TAB*TABS;
+const REDIRECT=cleanRedirect(location.origin,location.pathname);
+
+const S={
+  clientId:LS.get('sb_client',''),
+  tracks:LS.get('sb_tracks',[]),       // [{uri,name,artist}]
+  plName:LS.get('sb_plname',''),
+  cues:LS.get('sb_cues',{}),           // uri -> ms
+  deviceId:LS.get('sb_device',''),
+  tab:LS.get('sb_tab',0),
+  playingIdx:-1, playingUri:'', edit:false, pollTimer:null, cueIdx:-1
+};
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- UI helpers ---------- */
+let toastT=null;
+function toast(msg,err){
+  const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':'');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.className='toast',err?5500:2200);
+}
+function setNow(title,sub){ $('nowTitle').textContent=title; $('nowSub').textContent=sub||''; }
+
+/* ---------- Auth (PKCE) ---------- */
+async function login(){
+  const id=$('clientId').value.trim();
+  if(!id){ toast('Fyll i Client ID först',true); return; }
+  S.clientId=id; LS.set('sb_client',id);
+  const rnd=new Uint8Array(64); crypto.getRandomValues(rnd);
+  const verifier=b64url(rnd);
+  const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
+  const challenge=b64url(hash);
+  LS.set('sb_verifier',verifier);
+  const p=new URLSearchParams({
+    response_type:'code',client_id:id,scope:SCOPES,redirect_uri:REDIRECT,
+    code_challenge_method:'S256',code_challenge:challenge
+  });
+  location.href='https://accounts.spotify.com/authorize?'+p.toString();
+}
+async function tokenRequest(params){
+  const r=await fetch('https://accounts.spotify.com/api/token',{
+    method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams(params)
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error_description||d.error||('Token-fel '+r.status));
+  LS.set('sb_token',{
+    access:d.access_token,
+    refresh:d.refresh_token||(LS.get('sb_token',{}).refresh),
+    exp:Date.now()+(d.expires_in||3600)*1000
+  });
+}
+async function handleRedirect(){
+  const q=new URLSearchParams(location.search);
+  if(!q.has('code')&&!q.has('error')) return;
+  const code=q.get('code'), err=q.get('error');
+  history.replaceState({},'',REDIRECT);
+  if(err){ toast('Inloggning avbröts: '+err,true); return; }
+  try{
+    await tokenRequest({
+      client_id:S.clientId,grant_type:'authorization_code',code,
+      redirect_uri:REDIRECT,code_verifier:LS.get('sb_verifier','')
+    });
+    LS.del('sb_verifier');
+    toast('Inloggad ✔');
+  }catch(e){ toast('Kunde inte logga in: '+e.message,true); }
+}
+async function getToken(force){
+  const t=LS.get('sb_token',null);
+  if(!t||!t.refresh&&!t.access){ const e=new Error('NO_TOKEN'); e.status=401; throw e; }
+  if(!force&&t.exp-Date.now()>60000) return t.access;
+  if(!t.refresh){ const e=new Error('NO_TOKEN'); e.status=401; throw e; }
+  await tokenRequest({client_id:S.clientId,grant_type:'refresh_token',refresh_token:t.refresh});
+  return LS.get('sb_token').access;
+}
+function isLoggedIn(){ const t=LS.get('sb_token',null); return !!(t&&(t.refresh||t.access)); }
+function logout(){ LS.del('sb_token'); updateLoginState(); toast('Utloggad'); }
+
+/* ---------- Spotify API ---------- */
+async function api(method,path,body,retry=true){
+  const tok=await getToken();
+  const r=await fetch('https://api.spotify.com/v1'+path,{
+    method,
+    headers:Object.assign({Authorization:'Bearer '+tok},body?{'Content-Type':'application/json'}:{}),
+    body:body?JSON.stringify(body):undefined
+  });
+  if(r.status===401&&retry){ await getToken(true); return api(method,path,body,false); }
+  if(r.status===204) return null;
+  let data=null; try{ data=await r.json(); }catch(e){}
+  if(!r.ok){
+    const e=new Error((data&&data.error&&data.error.message)||r.statusText||('HTTP '+r.status));
+    e.status=r.status; e.reason=data&&data.error&&data.error.reason; e.retryAfter=r.headers.get('Retry-After');
+    throw e;
+  }
+  return data;
+}
+function handleErr(e){
+  console.error(e);
+  if(e.status===401||e.message==='NO_TOKEN'){ toast('Logga in igen via ⚙',true); updateLoginState(); }
+  else if(e.reason==='PREMIUM_REQUIRED'){ toast('Spotify Premium krävs för uppspelningsstyrning',true); }
+  else if(e.status===404||e.reason==='NO_ACTIVE_DEVICE'){ toast('Ingen aktiv enhet. Öppna Spotify på plattan, spela något en sekund och välj enhet i ⚙.',true); }
+  else if(e.status===429){ toast('För många anrop till Spotify, vänta '+(e.retryAfter||'en stund')+' s',true); }
+  else if(e.status===403){ toast('Spotify nekade (403). Är kontot tillagt under Users and Access i Spotify-appen? '+e.message,true); }
+  else toast('Fel: '+e.message,true);
+}
+const devQ=(first)=>S.deviceId?((first?'?':'&')+'device_id='+encodeURIComponent(S.deviceId)):'';
+
+/* ---------- Spellista ---------- */
+async function loadMyPlaylists(){
+  try{
+    const d=await api('GET','/me/playlists?limit=50');
+    const sel=$('plSel'); sel.innerHTML='<option value="">— välj spellista —</option>';
+    (d.items||[]).forEach(p=>{
+      if(!p) return;
+      const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o);
+    });
+    $('plState').textContent=(d.items||[]).length+' spellistor hittades.';
+  }catch(e){ handleErr(e); }
+}
+async function loadPlaylist(){
+  const id=parsePlaylistId($('plIn').value)||$('plSel').value;
+  if(!id){ toast('Välj en spellista eller klistra in länk',true); return; }
+  try{
+    $('plState').textContent='Laddar…';
+    let name=''; try{ const m=await api('GET','/playlists/'+id+'?fields=name'); name=(m&&m.name)||''; }catch(e){}
+    const out=[]; let skipped=0;
+    for(let off=0;off<MAX;off+=100){
+      const d=await api('GET','/playlists/'+id+'/items?limit=100&offset='+off);
+      const items=(d&&d.items)||[];
+      for(const it of items){
+        const tr=it&&(it.item||it.track);
+        if(!tr||tr.type==='episode'||!tr.uri||tr.is_local){ skipped++; continue; }
+        out.push({uri:tr.uri,name:tr.name,artist:(tr.artists||[]).map(a=>a.name).join(', ')});
+      }
+      if(items.length<100||!d.next) break;
+    }
+    if(!out.length){ $('plState').textContent='Inga spelbara låtar hittades. (Du kan bara läsa spellistor du äger eller är medredaktör i.)'; return; }
+    S.tracks=out.slice(0,MAX); S.plName=name;
+    LS.set('sb_tracks',S.tracks); LS.set('sb_plname',name);
+    S.playingIdx=-1; S.tab=0; LS.set('sb_tab',0);
+    renderTabs(); renderGrid();
+    $('plState').textContent='Laddade '+S.tracks.length+' låtar'+(name?' från "'+name+'"':'')+
+      (out.length>MAX?' (bara de första '+MAX+' används)':'')+(skipped?' · '+skipped+' hoppades över':'')+'.';
+    toast('Spellistan laddad ✔');
+  }catch(e){ $('plState').textContent=''; handleErr(e); }
+}
+
+/* ---------- Enheter ---------- */
+async function loadDevices(){
+  try{
+    const d=await api('GET','/me/player/devices');
+    const sel=$('devSel'); sel.innerHTML='<option value="">Aktiv enhet</option>';
+    (d.devices||[]).forEach(v=>{
+      const o=document.createElement('option'); o.value=v.id;
+      o.textContent=v.name+' ('+v.type+')'+(v.is_active?' ●':''); sel.appendChild(o);
+    });
+    if(S.deviceId&&[...sel.options].some(o=>o.value===S.deviceId)) sel.value=S.deviceId;
+    else { S.deviceId=''; sel.value=''; }
+    if(!(d.devices||[]).length) toast('Inga enheter hittades. Öppna Spotify-appen på plattan.',true);
+  }catch(e){ handleErr(e); }
+}
+
+/* ---------- Uppspelning ---------- */
+async function playIndex(i){
+  const tr=S.tracks[i]; if(!tr) return;
+  const cue=S.cues[tr.uri]||0;
+  S.playingIdx=i; S.playingUri=tr.uri; markPlaying(); setNow(tr.name,tr.artist+(cue?' · start '+fmtMs(cue):''));
+  const t0=performance.now();
+  try{
+    await api('PUT','/me/player/play'+devQ(true),{uris:[tr.uri],position_ms:cue});
+    toast('▶ '+Math.round(performance.now()-t0)+' ms');
+    startPoll();
+  }catch(e){ S.playingIdx=-1; markPlaying(); handleErr(e); }
+}
+async function stopNow(){
+  try{ await api('PUT','/me/player/pause'+devQ(true)); S.playingIdx=-1; markPlaying(); setNow('Stoppad',''); stopPoll(); }
+  catch(e){ if(e.status===403&&/already paused|restriction/i.test(e.message||'')){ stopPoll(); return; } handleErr(e); }
+}
+let fading=false;
+async function fadeStop(){
+  if(fading) return; fading=true;
+  try{
+    const p=await api('GET','/me/player');
+    const vol=p&&p.device&&p.device.volume_percent;
+    if(vol==null||(p.device&&p.device.supports_volume===false)){ await stopNow(); return; }
+    const steps=6;
+    try{
+      for(let s=1;s<=steps;s++){
+        await api('PUT','/me/player/volume?volume_percent='+Math.round(vol*(1-s/steps))+devQ(false));
+        await sleep(350);
+      }
+    }catch(e){ /* faller tillbaka på paus */ }
+    await stopNow();
+    try{ await api('PUT','/me/player/volume?volume_percent='+vol+devQ(false)); }catch(e){}
+  }catch(e){ handleErr(e); }
+  finally{ fading=false; }
+}
+
+/* ---------- Status-polling (glest för att spara kvot) ---------- */
+function startPoll(){ stopPoll(); S.pollTimer=setInterval(pollOnce,5000); }
+function stopPoll(){ if(S.pollTimer){ clearInterval(S.pollTimer); S.pollTimer=null; } }
+async function pollOnce(){
+  if(document.hidden) return;
+  try{
+    const p=await api('GET','/me/player');
+    if(!p||!p.item){ return; }
+    if(!p.is_playing){ S.playingIdx=-1; markPlaying(); stopPoll(); return; }
+    const uri=p.item.uri;
+    if(uri!==S.playingUri||S.playingIdx<0||S.tracks[S.playingIdx]?.uri!==uri){
+      S.playingUri=uri; S.playingIdx=S.tracks.findIndex(t=>t.uri===uri); markPlaying();
+    }
+    setNow(p.item.name,(p.item.artists||[]).map(a=>a.name).join(', ')+' · '+fmtMs(p.progress_ms));
+  }catch(e){ if(e.status===429) stopPoll(); }
+}
+
+/* ---------- Cue ---------- */
+async function setCueHere(){
+  try{
+    const p=await api('GET','/me/player');
+    if(!p||!p.item){ toast('Inget spelas just nu',true); return; }
+    S.cues[p.item.uri]=p.progress_ms; LS.set('sb_cues',S.cues);
+    renderGrid();
+    toast('Cue satt: '+fmtMs(p.progress_ms)+' · '+p.item.name);
+  }catch(e){ handleErr(e); }
+}
+function openCue(i){
+  const tr=S.tracks[i]; if(!tr) return;
+  S.cueIdx=i;
+  $('cTitle').textContent=tr.name; $('cSub').textContent=tr.artist;
+  $('cIn').value=S.cues[tr.uri]?fmtMs(S.cues[tr.uri]):'';
+  $('dCue').showModal();
+}
+function cueSave(){
+  const tr=S.tracks[S.cueIdx]; if(!tr) return;
+  const raw=$('cIn').value.trim();
+  if(!raw){ delete S.cues[tr.uri]; }
+  else{
+    const ms=parseTime(raw);
+    if(ms==null){ toast('Ogiltig tid. Skriv t.ex. 0:42 eller 42.5',true); return; }
+    S.cues[tr.uri]=ms;
+  }
+  LS.set('sb_cues',S.cues); renderGrid(); $('dCue').close();
+}
+async function cueNow(){
+  const tr=S.tracks[S.cueIdx]; if(!tr) return;
+  try{
+    const p=await api('GET','/me/player');
+    if(!p||!p.item||p.item.uri!==tr.uri){ toast('Låten spelas inte nu. Stäng, spela den i vanligt läge och försök igen.',true); return; }
+    $('cIn').value=fmtMs(p.progress_ms);
+  }catch(e){ handleErr(e); }
+}
+
+/* ---------- Rendering ---------- */
+function renderTabs(){
+  const nav=$('tabs'); nav.innerHTML='';
+  for(let t=0;t<TABS;t++){
+    const b=document.createElement('button');
+    b.className='tab'+(t===S.tab?' active':'')+(S.tracks.length<=t*PER_TAB?' dim':'');
+    b.textContent=String(t+1); b.dataset.tab=t;
+    if(S.playingIdx>=0&&Math.floor(S.playingIdx/PER_TAB)===t){ const d=document.createElement('i'); d.className='dot'; b.appendChild(d); }
+    b.onclick=()=>{ S.tab=t; LS.set('sb_tab',t); renderTabs(); renderGrid(); };
+    nav.appendChild(b);
+  }
+}
+function renderGrid(){
+  const g=$('grid'); g.innerHTML='';
+  for(let k=0;k<PER_TAB;k++){
+    const i=S.tab*PER_TAB+k, tr=S.tracks[i];
+    const b=document.createElement('button');
+    b.className='pad'+(tr?'':' empty')+(i===S.playingIdx?' playing':''); b.dataset.idx=i;
+    if(tr){
+      const n=document.createElement('span'); n.className='n'; n.textContent='#'+(i+1);
+      const t=document.createElement('span'); t.className='t'; t.textContent=tr.name;
+      const a=document.createElement('span'); a.className='a'; a.textContent=tr.artist;
+      b.append(n,t,a);
+      if(S.cues[tr.uri]){ const c=document.createElement('span'); c.className='c'; c.textContent='▶ '+fmtMs(S.cues[tr.uri]); b.appendChild(c); }
+      b.onclick=()=>{ if(S.edit) openCue(i); else playIndex(i); };
+    }
+    g.appendChild(b);
+  }
+}
+function markPlaying(){
+  document.querySelectorAll('.pad').forEach(p=>p.classList.toggle('playing',+p.dataset.idx===S.playingIdx));
+  renderTabs();
+}
+function updateLoginState(){
+  const el=$('loginState');
+  if(isLoggedIn()){ el.innerHTML='<span class="ok">● Inloggad</span>'; }
+  else { el.innerHTML='<span class="bad">● Inte inloggad</span>'; }
+}
+
+/* ---------- Händelser ---------- */
+$('bStop').onclick=stopNow;
+$('bFade').onclick=fadeStop;
+$('bCue').onclick=setCueHere;
+$('bEdit').onclick=()=>{ S.edit=!S.edit; document.body.classList.toggle('edit',S.edit); $('bEdit').classList.toggle('on',S.edit); toast(S.edit?'Redigera: tryck en knapp för att ställa in cue':'Spelläge'); };
+$('bSet').onclick=()=>{ $('clientId').value=S.clientId; $('redir').textContent=REDIRECT; updateLoginState(); $('dSet').showModal(); };
+$('bClose').onclick=()=>$('dSet').close();
+$('bLogin').onclick=login;
+$('bLogout').onclick=logout;
+$('bPl').onclick=loadMyPlaylists;
+$('bLoad').onclick=loadPlaylist;
+$('bDev').onclick=loadDevices;
+$('devSel').onchange=e=>{ S.deviceId=e.target.value; LS.set('sb_device',S.deviceId); };
+$('plSel').onchange=()=>{ $('plIn').value=''; };
+$('bExp').onclick=()=>{ $('cueBox').value=JSON.stringify(S.cues); $('cueBox').select(); toast('Kopiera texten och spara den någonstans'); };
+$('bImp').onclick=()=>{
+  try{
+    const o=JSON.parse($('cueBox').value);
+    if(!o||typeof o!=='object'||Array.isArray(o)) throw new Error('fel format');
+    let n=0; for(const k in o){ if(typeof o[k]==='number'&&o[k]>=0){ S.cues[k]=o[k]; n++; } }
+    LS.set('sb_cues',S.cues); renderGrid(); toast(n+' cue-punkter importerade');
+  }catch(e){ toast('Kunde inte läsa importen: '+e.message,true); }
+};
+$('cSave').onclick=cueSave;
+$('cClose').onclick=()=>$('dCue').close();
+$('cClear').onclick=()=>{ $('cIn').value=''; cueSave(); };
+$('cNow').onclick=cueNow;
+document.querySelectorAll('[data-nudge]').forEach(b=>b.onclick=()=>{
+  const cur=parseTime($('cIn').value)||0;
+  $('cIn').value=fmtMs(Math.max(0,cur+(+b.dataset.nudge)));
+});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&S.pollTimer) pollOnce(); });
+document.addEventListener('click',()=>{ try{ if(navigator.wakeLock&&!window.__wl){ navigator.wakeLock.request('screen').then(l=>{window.__wl=l; l.addEventListener('release',()=>{window.__wl=null;});}).catch(()=>{}); } }catch(e){} },{once:false});
+
+/* ---------- Start ---------- */
+(async function init(){
+  $('redir').textContent=REDIRECT;
+  renderTabs(); renderGrid();
+  if(S.tracks.length) setNow(S.plName||'Spellista laddad',S.tracks.length+' låtar · redo');
+  await handleRedirect();
+  updateLoginState();
+  if(!S.clientId||!isLoggedIn()){ $('clientId').value=S.clientId; $('dSet').showModal(); }
+  else { loadDevices(); }
+})();
+</script>
+</body>
+</html>
