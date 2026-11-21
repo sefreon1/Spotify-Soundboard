@@ -81,9 +81,9 @@ Client ID och inloggning sparas på enheten. Du behöver bara göra det här en 
 
 **Flaggor och filter**
 
-Varje låt kan flaggas som **Start**, **Uppvärm**, **Paus**, **Mål** eller **Utvis**. Flaggan syns som en liten färgad etikett på knappen. Raden högst upp filtrerar spellistan:
+Varje låt kan flaggas som **Start**, **Uppvärm**, **Paus**, **Mål**, **Utvis** eller **SpelStopp**. Flaggan syns som en liten färgad etikett på knappen. Raden högst upp filtrerar spellistan:
 
-- **Alla** visar hela spellistan, **Start / Uppvärm / Paus / Mål / Utvis** visar bara låtar med den flaggan och **Oflaggade** visar låtar som saknar flagga. Siffran är antal låtar.
+- **Alla** visar hela spellistan, **Start / Uppvärm / Paus / Mål / Utvis / SpelStopp** visar bara låtar med den flaggan och **Oflaggade** visar låtar som saknar flagga. Siffran är antal låtar.
 - Spellistan kan alltså vara blandad. Du behöver inte sortera den i Spotify, eftersom filtret samlar låtarna åt dig.
 - Visar ett filter fler än 30 låtar delas de upp på flikarna 1, 2, 3 och så vidare (30 per flik).
 - När du byter filter blir alla låtar gröna igen.
@@ -93,7 +93,7 @@ Varje låt kan flaggas som **Start**, **Uppvärm**, **Paus**, **Mål** eller **U
 Tryck ✎ Redigera. Då visas en rad med val under knapparna: **Tryck på låt:**
 
 - **Ställ in cue:** tryck på en låt och skriv startpunkt, till exempel `0:42.5`. Finjustera med −1 s, −0,5, +0,5 och +1 s.
-- **Start / Uppvärm / Paus / Mål / Utvis:** välj en flagga och tryck sedan på de låtar som ska ha den. Varje tryck flaggar direkt, så du kan flagga många låtar snabbt. Byt flagga när du vill.
+- **Start / Uppvärm / Paus / Mål / Utvis / SpelStopp:** välj en flagga och tryck sedan på de låtar som ska ha den. Varje tryck flaggar direkt, så du kan flagga många låtar snabbt. Byt flagga när du vill.
 - **Ta bort flagga:** tryck på låtar som ska bli oflaggade.
 - Tryck på en **flik** för att ge den ett namn, till exempel `Efter mål`. Flik-namnen sparas separat för varje filter.
 - Tryck ✎ Redigera igen för att gå tillbaka till spelläget. Först då uppdateras listan efter det filter som är valt.
