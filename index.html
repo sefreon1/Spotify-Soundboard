@@ -16,12 +16,13 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+html{background:#070a12}
 body{
   display:flex;flex-direction:column;height:100dvh;user-select:none;-webkit-user-select:none;
-  background:
+  background-color:#070a12;
+  background-image:
     radial-gradient(900px 480px at 8% -8%, #16306e66, transparent 60%),
-    radial-gradient(800px 460px at 108% 4%, #4a1466440, transparent 60%),
-    var(--bg);
+    radial-gradient(800px 460px at 108% 4%, #4a146644, transparent 60%);
 }
 button{font:inherit;color:inherit;cursor:pointer;border:0}
 
@@ -37,8 +38,17 @@ header.live{box-shadow:0 6px 30px -10px #3b6cff88}
 .bar{height:5px;border-radius:5px;background:#1a2236;margin-top:9px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue1),#9ec0ff);border-radius:5px;transition:width .25s linear;box-shadow:0 0 10px #5a95ff}
 
+/* ---------- Filter (flaggor) ---------- */
+.filters{display:flex;gap:7px;padding:9px 12px 0;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;height:34px;padding:0 13px;border-radius:17px;background:#121a2b;border:1px solid var(--line);font-size:13px;font-weight:800;color:#b6c3e6;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.fchip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.fchip span{opacity:.6;font-weight:700}
+.fchip.active{background:#e9eeff;color:#0a1020;border-color:transparent}
+.fchip.active span{opacity:.65}
+
 /* ---------- Flikar + verktyg ---------- */
-.tabs{display:flex;gap:7px;padding:9px 12px 6px;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:7px;padding:8px 12px 6px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:1 0 auto;min-width:44px;height:40px;padding:0 12px;border-radius:12px;background:#121a2b;border:1px solid var(--line);font-weight:800;font-size:16px;color:#9fb0d6;position:relative;white-space:nowrap}
 .tab.named{font-size:14px;padding:0 16px 0 12px}
@@ -58,6 +68,15 @@ body.edit .tab{border:2px dashed #ffd36b}
 .legend .g::before{background:var(--green1)} .legend .b::before{background:var(--blue1)} .legend .r::before{background:var(--red2)}
 @media (min-width:640px){.legend{display:flex}}
 
+/* penselrad (bara i redigeringsläge) */
+.brush{display:none;gap:7px;padding:0 12px 8px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.brush::-webkit-scrollbar{display:none}
+body.edit .brush{display:flex}
+.brush .lbl{flex:0 0 auto;font-size:12px;color:var(--muted);font-weight:700}
+.bchip{flex:0 0 auto;height:34px;padding:0 13px;border-radius:17px;background:#121a2b;border:2px solid var(--line);font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;white-space:nowrap;color:#d6def5}
+.bchip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bchip.sel{border-color:#fff;background:#243049}
+
 /* ---------- Rutnät ---------- */
 main{flex:1;min-height:0;padding:4px 12px 10px;overflow:auto}
 .grid{display:grid;gap:9px;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(84px,1fr);min-height:100%}
@@ -65,7 +84,7 @@ main{flex:1;min-height:0;padding:4px 12px 10px;overflow:auto}
 @media (min-width:980px){.grid{grid-template-columns:repeat(6,1fr)}}
 .pad{
   position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;
-  border-radius:16px;padding:10px 11px;overflow:hidden;min-width:0;
+  border-radius:16px;padding:10px 11px 18px;overflow:hidden;min-width:0;
   transition:transform .08s, filter .15s, box-shadow .2s;
   background:linear-gradient(150deg,var(--green1),var(--green2));color:#03230f;
   box-shadow:0 6px 18px -8px #10a24baa, inset 0 1px 0 #ffffff55;
@@ -75,6 +94,7 @@ main{flex:1;min-height:0;padding:4px 12px 10px;overflow:auto}
 .pad .t{font-weight:800;font-size:14.5px;line-height:1.15;width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .pad .a{font-size:11px;margin-top:3px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.72;font-weight:600}
 .pad .c{position:absolute;bottom:5px;right:8px;font-size:10px;font-weight:800;background:#0000002e;border-radius:8px;padding:2px 6px}
+.pad .tg{position:absolute;bottom:5px;left:8px;font-size:9.5px;font-weight:900;letter-spacing:.04em;color:#111;border-radius:8px;padding:2px 7px;box-shadow:0 0 0 1px #0004}
 .pad.empty{background:#0d1220;box-shadow:none;border:1px dashed #1b2338;opacity:.5;pointer-events:none}
 .pad.empty .n,.pad.empty .t,.pad.empty .a{display:none}
 
@@ -87,8 +107,9 @@ main{flex:1;min-height:0;padding:4px 12px 10px;overflow:auto}
 .pad.playing .a{opacity:.85}
 .pad.playing .c{background:#ffffff33}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 2px #9ec0ff inset,0 0 22px 0 #3b6cffaa}50%{box-shadow:0 0 0 2px #cfe0ff inset,0 0 38px 6px #3b6cffee}}
-.eq{position:absolute;left:10px;bottom:7px;display:none;gap:3px;align-items:flex-end;height:16px}
+.eq{position:absolute;right:9px;top:6px;display:none;gap:3px;align-items:flex-end;height:16px}
 .pad.playing .eq{display:flex}
+.pad.playing .n{display:none}
 .eq i{width:4px;background:#fff;border-radius:2px;animation:eq 0.9s ease-in-out infinite}
 .eq i:nth-child(1){animation-delay:-.2s}.eq i:nth-child(2){animation-delay:-.55s}.eq i:nth-child(3){animation-delay:-.1s}.eq i:nth-child(4){animation-delay:-.7s}
 @keyframes eq{0%,100%{height:4px}50%{height:16px}}
@@ -146,6 +167,7 @@ code{background:#080c16;border:1px solid var(--line);border-radius:6px;padding:2
   </div>
   <div class="bar"><i id="barFill"></i></div>
 </header>
+<nav class="filters" id="filters"></nav>
 <nav class="tabs" id="tabs"></nav>
 <div class="tools">
   <button class="chip reset" id="bReset">↺ Alla gröna</button>
@@ -153,6 +175,7 @@ code{background:#080c16;border:1px solid var(--line);border-radius:6px;padding:2
   <button class="chip" id="bEdit">✎ Redigera</button>
   <div class="legend"><span class="g">Redo</span><span class="b">Spelas</span><span class="r">Spelad</span></div>
 </div>
+<div class="brush" id="brush"></div>
 <main><div class="grid" id="grid"></div></main>
 <div class="dock">
   <button class="big play" id="bPlay">▶ SPELA<small id="nextLbl">—</small></button>
@@ -178,6 +201,10 @@ code{background:#080c16;border:1px solid var(--line);border-radius:6px;padding:2
   <div class="small" id="loginState"></div>
 
   <h3>2. Spellista</h3>
+  <div>
+    <label for="savedSel">Sparade spellistor (byt utan att hämta om)</label>
+    <select id="savedSel"><option value="">— inga sparade ännu —</option></select>
+  </div>
   <div class="row">
     <select id="plSel"><option value="">— hämta mina spellistor —</option></select>
     <button class="btn" id="bPl">Hämta mina</button>
@@ -186,7 +213,8 @@ code{background:#080c16;border:1px solid var(--line);border-radius:6px;padding:2
     <label for="plIn">…eller klistra in länk/ID till spellistan</label>
     <input id="plIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://open.spotify.com/playlist/…">
   </div>
-  <button class="btn primary" id="bLoad">Ladda in i soundboardet</button>
+  <button class="btn primary" id="bLoad">Ladda in från Spotify</button>
+  <div class="small">Cue-punkter, flaggor och flik-namn sparas separat för varje spellista. Laddar du in en spellista igen finns allt kvar.</div>
   <div class="small" id="plState"></div>
 
   <h3>3. Spelare (enhet)</h3>
@@ -194,15 +222,15 @@ code{background:#080c16;border:1px solid var(--line);border-radius:6px;padding:2
     <select id="devSel"><option value="">Aktiv enhet</option></select>
     <button class="btn" id="bDev">Uppdatera</button>
   </div>
-  <div class="small">Öppna Spotify-appen på plattan och spela något en sekund så att plattan syns här. Välj den och ljudet kommer från Spotify-appen på den enheten.</div>
+  <div class="small">Öppna Spotify-appen på enheten och spela något en sekund så att den syns här. Välj den och ljudet kommer från Spotify-appen på den enheten.</div>
 
-  <h3>4. Cue-punkter</h3>
-  <div class="small">Cue-punkter sparas per låt på den här enheten. Exportera dem som säkerhetskopia.</div>
+  <h3>4. Säkerhetskopia (den här spellistan)</h3>
+  <div class="small">Cue-punkter, flaggor och flik-namn för den spellista som är laddad just nu.</div>
   <div class="row">
     <button class="btn" id="bExp">Exportera</button>
     <button class="btn" id="bImp">Importera</button>
   </div>
-  <textarea id="cueBox" placeholder="Cue-data (JSON) visas här vid export. Klistra in här och tryck Importera."></textarea>
+  <textarea id="cueBox" placeholder="Data (JSON) visas här vid export. Klistra in här och tryck Importera."></textarea>
 
   <button class="btn" id="bClose">Stäng</button>
 </div></dialog>
@@ -283,13 +311,29 @@ function parsePlaylistId(input){
 function cleanRedirect(origin,pathname){
   return origin+pathname.replace(/index\.html$/,'');
 }
-// Nästa låt: första ospelade (ej spelad, ej spelande) efter "from" i intervallet [start,end),
-// annars första ospelade från början av intervallet, annars -1.
-function computeNext(from,start,end,played,playing){
+// Nästa låt: första ospelade (ej spelad, ej spelande) efter "from" i listan "slice" (globala index),
+// annars första ospelade från början av listan, annars -1. Är "from" inte med i listan börjar sökningen från början.
+function computeNext(from,slice,played,playing){
   const ok=i=>!played.has(i)&&i!==playing;
-  for(let i=Math.max(from+1,start);i<end;i++) if(ok(i)) return i;
-  for(let i=start;i<=from&&i<end;i++) if(ok(i)) return i;
+  const pos=slice.indexOf(from);
+  for(let k=pos+1;k<slice.length;k++) if(ok(slice[k])) return slice[k];
+  for(let k=0;k<=pos&&k<slice.length;k++) if(ok(slice[k])) return slice[k];
   return -1;
+}
+// Flik-namn sparas per filter: {alla:[..10], mal:[..10], ...}. Äldre format var en enkel lista.
+function normTabNames(x){
+  if(Array.isArray(x)) return {alla:x.map(v=>typeof v==='string'?v:'')};
+  if(x&&typeof x==='object'){
+    const o={};
+    for(const k in x) if(Array.isArray(x[k])) o[k]=x[k].map(v=>typeof v==='string'?v:'');
+    return o;
+  }
+  return {};
+}
+function matchesFilter(tag,filter){
+  if(filter==='alla') return true;
+  if(filter==='none') return !tag;
+  return tag===filter;
 }
 // ==/PURE==
 
@@ -301,27 +345,78 @@ const LS={
 const SCOPES='playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-playback-state';
 const PER_TAB=30, TABS=10, MAX=PER_TAB*TABS;
 const REDIRECT=cleanRedirect(location.origin,location.pathname);
+const TAGS=[
+  {k:'uppvarm',l:'Uppvärm',c:'#ff9f1c'},
+  {k:'paus',l:'Paus',c:'#a78bfa'},
+  {k:'mal',l:'Mål',c:'#22d3ee'},
+  {k:'utvis',l:'Utvis',c:'#fde047'}
+];
+const tagDef=k=>TAGS.find(t=>t.k===k);
 
 const S={
   clientId:LS.get('sb_client',''),
-  tracks:LS.get('sb_tracks',[]),       // [{uri,name,artist,dur}]
-  plName:LS.get('sb_plname',''),
-  cues:LS.get('sb_cues',{}),           // uri -> ms
+  plId:'', plName:'',
+  tracks:[],                           // [{uri,name,artist,dur}]
+  cues:{},                             // uri -> ms        (per spellista)
+  tags:{},                             // uri -> flagg-nyckel (per spellista)
+  tabNames:{},                         // filter -> [10 namn] (per spellista)
+  filter:LS.get('sb_filter','alla'),
+  view:[],                             // globala index som matchar filtret
+  brush:'cue',
   deviceId:LS.get('sb_device',''),
-  tab:LS.get('sb_tab',0),
-  tabNames:LS.get('sb_tabnames',[]),   // 10 st namn, tom sträng = bara siffra
-  tabEdit:-1,
+  tab:LS.get('sb_tab',0), tabEdit:-1,
   playingIdx:-1, playingUri:'', nextIdx:-1, played:new Set(),
-  startPos:0, startedAt:0, durs:{}, seq:0,
+  startPos:0, startedAt:0, durs:{}, seq:0, restoreVol:null,
   edit:false, pollTimer:null, endTimer:null, cueIdx:-1
 };
 
+/* ---------- Sparad data per spellista ---------- */
+function applyRec(id,rec){
+  S.plId=id; S.plName=rec.name||''; S.tracks=rec.tracks||[];
+  S.cues=rec.cues||{}; S.tags=rec.tags||{}; S.tabNames=normTabNames(rec.tabNames);
+}
+function loadActive(){
+  const act=LS.get('sb_active','');
+  const rec=act?LS.get('sb_pl_'+act,null):null;
+  if(rec){ applyRec(act,rec); return; }
+  // äldre version utan spellist-id: läs de gamla nycklarna
+  S.plId=''; S.plName=LS.get('sb_plname','');
+  S.tracks=LS.get('sb_tracks',[]); S.cues=LS.get('sb_cues',{});
+  S.tags=LS.get('sb_tags',{}); S.tabNames=normTabNames(LS.get('sb_tabnames',{}));
+}
+function persist(){
+  if(S.plId){
+    LS.set('sb_pl_'+S.plId,{name:S.plName,tracks:S.tracks,cues:S.cues,tags:S.tags,tabNames:S.tabNames});
+    const idx=LS.get('sb_pls',{}); idx[S.plId]=S.plName||S.plId; LS.set('sb_pls',idx);
+    LS.set('sb_active',S.plId);
+  } else {
+    LS.set('sb_tracks',S.tracks); LS.set('sb_plname',S.plName); LS.set('sb_cues',S.cues);
+    LS.set('sb_tags',S.tags); LS.set('sb_tabnames',S.tabNames);
+  }
+}
+loadActive();
+
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const tabStart=t=>t*PER_TAB;
-const tabEnd=t=>Math.min(S.tracks.length,t*PER_TAB+PER_TAB);
-const tabOf=i=>Math.floor(i/PER_TAB);
 const durOf=i=>{ const tr=S.tracks[i]; return tr?(tr.dur||S.durs[tr.uri]||0):0; };
+
+/* ---------- Vy (filter) ---------- */
+function computeView(){
+  S.view=[];
+  S.tracks.forEach((t,i)=>{ if(matchesFilter(S.tags[t.uri],S.filter)) S.view.push(i); });
+  const pages=Math.max(1,Math.ceil(S.view.length/PER_TAB));
+  if(S.tab>=pages||S.tab<0) S.tab=0;
+}
+const curSlice=()=>S.view.slice(S.tab*PER_TAB,S.tab*PER_TAB+PER_TAB);
+const tabOfIdx=i=>{ const p=S.view.indexOf(i); return p<0?-1:Math.floor(p/PER_TAB); };
+const countFor=k=>S.tracks.filter(t=>matchesFilter(S.tags[t.uri],k)).length;
+const getTabName=t=>((S.tabNames[S.filter]||[])[t]||'').trim();
+function setFilter(k){
+  S.filter=k; LS.set('sb_filter',k);
+  S.tab=0; LS.set('sb_tab',0);
+  computeView(); resetTab();
+  renderFilters(); renderTabs(); renderGrid();
+}
 
 /* ---------- UI helpers ---------- */
 let toastT=null;
@@ -387,14 +482,15 @@ function isLoggedIn(){ const t=LS.get('sb_token',null); return !!(t&&(t.refresh|
 function logout(){ LS.del('sb_token'); updateLoginState(); toast('Utloggad'); }
 
 /* ---------- Spotify API ---------- */
-async function api(method,path,body,retry=true){
+async function api(method,path,body,retry=true,retry5=true){
   const tok=await getToken();
   const r=await fetch('https://api.spotify.com/v1'+path,{
     method,
     headers:Object.assign({Authorization:'Bearer '+tok},body?{'Content-Type':'application/json'}:{}),
     body:body?JSON.stringify(body):undefined
   });
-  if(r.status===401&&retry){ await getToken(true); return api(method,path,body,false); }
+  if(r.status===401&&retry){ await getToken(true); return api(method,path,body,false,retry5); }
+  if([502,503,504].includes(r.status)&&retry5){ await sleep(600); return api(method,path,body,retry,false); }  // tillfälligt fel hos Spotify: försök en gång till
   if(r.status===204) return null;
   let data=null; try{ data=await r.json(); }catch(e){}
   if(!r.ok){
@@ -427,6 +523,11 @@ async function loadMyPlaylists(){
     $('plState').textContent=(d.items||[]).length+' spellistor hittades.';
   }catch(e){ handleErr(e); }
 }
+function resetViewState(){
+  S.playingIdx=-1; S.playingUri=''; S.played.clear(); clearTimeout(S.endTimer);
+  S.filter='alla'; LS.set('sb_filter','alla'); S.tab=0; LS.set('sb_tab',0);
+  computeView(); resetNext(); renderSaved(); renderFilters(); renderTabs(); renderGrid(); refresh();
+}
 async function loadPlaylist(){
   const id=parsePlaylistId($('plIn').value)||$('plSel').value;
   if(!id){ toast('Välj en spellista eller klistra in länk',true); return; }
@@ -445,14 +546,37 @@ async function loadPlaylist(){
       if(items.length<100||!d.next) break;
     }
     if(!out.length){ $('plState').textContent='Inga spelbara låtar hittades. (Du kan bara läsa spellistor du äger eller är medredaktör i.)'; return; }
-    S.tracks=out.slice(0,MAX); S.plName=name;
-    LS.set('sb_tracks',S.tracks); LS.set('sb_plname',name);
-    S.playingIdx=-1; S.playingUri=''; S.played.clear(); S.tab=0; LS.set('sb_tab',0);
-    resetNext(); renderTabs(); renderGrid(); refresh();
+    const prevId=S.plId, rec=LS.get('sb_pl_'+id,null);
+    let kept;
+    if(rec){ applyRec(id,rec); kept=true; }               // spellistan är sparad sedan tidigare: behåll cues, flaggor, flik-namn
+    else if(!prevId){ S.plId=id; kept=true; }              // första gången: ta med det som redan fanns (äldre version)
+    else { S.plId=id; S.cues={}; S.tags={}; S.tabNames={}; kept=false; }
+    S.plId=id; S.plName=name||S.plName; S.tracks=out.slice(0,MAX);
+    persist();
+    resetViewState();
+    const nTag=S.tracks.filter(t=>S.tags[t.uri]).length, nCue=S.tracks.filter(t=>S.cues[t.uri]).length;
     $('plState').textContent='Laddade '+S.tracks.length+' låtar'+(name?' från "'+name+'"':'')+
-      (out.length>MAX?' (bara de första '+MAX+' används)':'')+(skipped?' · '+skipped+' hoppades över':'')+'.';
+      (out.length>MAX?' (bara de första '+MAX+' används)':'')+(skipped?' · '+skipped+' hoppades över':'')+
+      (kept&&(nTag||nCue)?' · '+nCue+' cue-punkter och '+nTag+' flaggor återställda':'')+'.';
     toast('Spellistan laddad ✔');
   }catch(e){ $('plState').textContent=''; handleErr(e); }
+}
+function switchSaved(id){
+  if(!id||id===S.plId) return;
+  const rec=LS.get('sb_pl_'+id,null);
+  if(!rec){ toast('Hittar inte den sparade spellistan',true); return; }
+  persist();
+  applyRec(id,rec); persist();
+  resetViewState();
+  $('plState').textContent='Bytte till "'+(S.plName||id)+'" ('+S.tracks.length+' låtar).';
+  toast('Bytte spellista ✔');
+}
+function renderSaved(){
+  const sel=$('savedSel'), idx=LS.get('sb_pls',{}); sel.innerHTML='';
+  const ids=Object.keys(idx);
+  if(!ids.length){ sel.innerHTML='<option value="">— inga sparade ännu —</option>'; return; }
+  ids.forEach(id=>{ const o=document.createElement('option'); o.value=id; o.textContent=idx[id]; sel.appendChild(o); });
+  sel.value=S.plId||'';
 }
 
 /* ---------- Enheter ---------- */
@@ -466,25 +590,31 @@ async function loadDevices(){
     });
     if(S.deviceId&&[...sel.options].some(o=>o.value===S.deviceId)) sel.value=S.deviceId;
     else { S.deviceId=''; sel.value=''; }
-    if(!(d.devices||[]).length) toast('Inga enheter hittades. Öppna Spotify-appen på plattan.',true);
+    if(!(d.devices||[]).length) toast('Inga enheter hittades. Öppna Spotify-appen på enheten.',true);
   }catch(e){ handleErr(e); }
 }
 
 /* ---------- Tillstånd: grön / blå / ljusröd + nästa ---------- */
-function resetNext(){ S.nextIdx=computeNext(tabStart(S.tab)-1,tabStart(S.tab),tabEnd(S.tab),S.played,S.playingIdx); }
+function resetNext(){ S.nextIdx=computeNext(-1,curSlice(),S.played,S.playingIdx); }
 function markEnded(){
   if(S.playingIdx>=0) S.played.add(S.playingIdx);
   S.playingIdx=-1; S.playingUri=''; clearTimeout(S.endTimer);
   refresh();
 }
 function resetTab(){
-  for(let i=tabStart(S.tab);i<tabEnd(S.tab);i++) S.played.delete(i);
+  curSlice().forEach(i=>S.played.delete(i));
   resetNext(); refresh();
 }
 
 /* ---------- Uppspelning ---------- */
+async function restoreVolume(){
+  if(S.restoreVol==null) return;
+  const v=S.restoreVol; S.restoreVol=null;
+  try{ await api('PUT','/me/player/volume?volume_percent='+v+devQ(false)); }catch(e){}
+}
 // Spelar upp; om Spotify svarar 404 (enheten sover/okänd) väcks den genom att flytta uppspelning dit, sedan försöker vi igen en gång.
 async function playOnDevice(body){
+  await restoreVolume();                         // volymen ska vara tillbaka efter en fade innan nästa låt startar
   try{ await api('PUT','/me/player/play'+devQ(true),body); return; }
   catch(e){
     if(e.status!==404) throw e;
@@ -502,7 +632,10 @@ async function playOnDevice(body){
   }
 }
 function onPad(i){
-  if(S.edit){ openCue(i); return; }
+  if(S.edit){
+    if(S.brush==='cue') openCue(i); else tagTrack(i,S.brush);
+    return;
+  }
   if(i===S.playingIdx){ stopNow(); return; }   // spelas -> stoppa
   playIndex(i);                                // grön eller röd -> spela
 }
@@ -513,8 +646,7 @@ async function playIndex(i){
   S.played.delete(i);
   S.playingIdx=i; S.playingUri=tr.uri; S.seq++;
   S.startPos=cue; S.startedAt=performance.now();
-  const ts=tabStart(tabOf(i)), te=Math.min(S.tracks.length,ts+PER_TAB);
-  S.nextIdx=computeNext(i,ts,te,S.played,S.playingIdx);
+  S.nextIdx=computeNext(i,curSlice(),S.played,S.playingIdx);
   setNow(tr.name,tr.artist+(cue?' · start '+fmtMs(cue):''));
   refresh();
   const t0=performance.now();
@@ -531,7 +663,7 @@ async function playIndex(i){
   }
 }
 function playNext(){
-  if(S.nextIdx<0){ toast('Alla låtar i fliken är spelade. Tryck ↺ Alla gröna.',true); return; }
+  if(S.nextIdx<0){ toast('Alla låtar här är spelade. Tryck ↺ Alla gröna.',true); return; }
   playIndex(S.nextIdx);
 }
 async function stopNow(){
@@ -551,16 +683,22 @@ async function fadeStop(){
       toast('Fade går inte: den här enheten ('+((p&&p.device&&p.device.name)||'?')+') tillåter inte volymstyrning från Spotify. Stoppar direkt.',true);
       await stopNow(); return;
     }
-    const steps=6; let failed=false;
+    if(S.restoreVol==null) S.restoreVol=vol;          // ursprunglig volym som ska tillbaka efteråt
+    const steps=6;
     try{
       for(let s=1;s<=steps;s++){
         await api('PUT','/me/player/volume?volume_percent='+Math.round(vol*(1-s/steps))+devQ(false));
         await sleep(350);
       }
-    }catch(e){ failed=true; toast('Fade misslyckades ('+(e.reason||e.message)+'). Stoppar direkt.',true); }
+    }catch(e){ toast('Fade misslyckades ('+(e.reason||e.message)+'). Stoppar direkt.',true); }
     await stopNow();
-    try{ await api('PUT','/me/player/volume?volume_percent='+vol+devQ(false)); }catch(e){}
-    if(failed) return;
+    // Vänta tills Spotify verkligen har pausat innan volymen höjs igen (annars hörs en höjning i slutet).
+    for(let k=0;k<10;k++){
+      await sleep(450);
+      try{ const q=await api('GET','/me/player'); if(!q||!q.is_playing) break; }catch(e){ break; }
+    }
+    await sleep(400);
+    await restoreVolume();
   }catch(e){ handleErr(e); }
   finally{ fading=false; }
 }
@@ -593,7 +731,7 @@ async function setCueHere(){
   try{
     const p=await api('GET','/me/player');
     if(!p||!p.item){ toast('Inget spelas just nu',true); return; }
-    S.cues[p.item.uri]=p.progress_ms; LS.set('sb_cues',S.cues);
+    S.cues[p.item.uri]=p.progress_ms; persist();
     renderGrid(); refresh();
     toast('Cue satt: '+fmtMs(p.progress_ms)+' · '+p.item.name);
   }catch(e){ handleErr(e); }
@@ -614,7 +752,7 @@ function cueSave(){
     if(ms==null){ toast('Ogiltig tid. Skriv t.ex. 0:42 eller 42.5',true); return; }
     S.cues[tr.uri]=ms;
   }
-  LS.set('sb_cues',S.cues); renderGrid(); refresh(); $('dCue').close();
+  persist(); renderGrid(); refresh(); $('dCue').close();
 }
 async function cueNow(){
   const tr=S.tracks[S.cueIdx]; if(!tr) return;
@@ -625,20 +763,71 @@ async function cueNow(){
   }catch(e){ handleErr(e); }
 }
 
+/* ---------- Flaggor ---------- */
+function tagTrack(i,key){
+  const tr=S.tracks[i]; if(!tr) return;
+  if(key==='none') delete S.tags[tr.uri]; else S.tags[tr.uri]=key;
+  persist();
+  renderGrid(); renderFilters();                       // vyn räknas inte om förrän du lämnar redigeringsläget (så knapparna inte hoppar)
+  const d=tagDef(key); toast(d?(d.l+' ← '+tr.name):('Flagga borttagen · '+tr.name));
+}
+function renderBrush(){
+  const b=$('brush'); b.innerHTML='';
+  const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent='Tryck på låt:'; b.appendChild(lbl);
+  const defs=[{k:'cue',l:'Ställ in cue'},...TAGS.map(t=>({k:t.k,l:t.l,c:t.c})),{k:'none',l:'Ta bort flagga'}];
+  defs.forEach(d=>{
+    const c=document.createElement('button'); c.className='bchip'+(S.brush===d.k?' sel':''); c.dataset.b=d.k;
+    if(d.c){ const i=document.createElement('i'); i.style.background=d.c; c.appendChild(i); }
+    c.appendChild(document.createTextNode(d.l));
+    c.onclick=()=>{ S.brush=d.k; renderBrush(); };
+    b.appendChild(c);
+  });
+}
+function renderFilters(){
+  const nav=$('filters'); nav.innerHTML='';
+  const defs=[{k:'alla',l:'Alla'},...TAGS.map(t=>({k:t.k,l:t.l,c:t.c})),{k:'none',l:'Oflaggade'}];
+  defs.forEach(d=>{
+    const b=document.createElement('button'); b.className='fchip'+(S.filter===d.k?' active':''); b.dataset.f=d.k;
+    if(d.c){ const i=document.createElement('i'); i.style.background=d.c; b.appendChild(i); }
+    b.appendChild(document.createTextNode(d.l+' '));
+    const n=document.createElement('span'); n.textContent=countFor(d.k); b.appendChild(n);
+    b.onclick=()=>setFilter(d.k);
+    nav.appendChild(b);
+  });
+}
+
+/* ---------- Flik-namn ---------- */
+function openTabName(t){
+  S.tabEdit=t;
+  const f=S.filter==='alla'?'':(S.filter==='none'?' (oflaggade)':' ('+(tagDef(S.filter)||{l:S.filter}).l+')');
+  $('tTitle').textContent='Namn på flik '+(t+1)+f;
+  $('tIn').value=getTabName(t);
+  $('dTab').showModal();
+  setTimeout(()=>{ try{ $('tIn').focus(); $('tIn').select(); }catch(e){} },50);
+}
+function tabNameSave(){
+  const t=S.tabEdit; if(t<0) return;
+  const arr=Array.from({length:TABS},(_,k)=>((S.tabNames[S.filter]||[])[k])||'');
+  arr[t]=$('tIn').value.trim().slice(0,24);
+  S.tabNames[S.filter]=arr;
+  persist();
+  $('dTab').close(); renderTabs(); refresh();
+}
+
 /* ---------- Rendering ---------- */
 function renderTabs(){
   const nav=$('tabs'); nav.innerHTML='';
   for(let t=0;t<TABS;t++){
     const b=document.createElement('button');
-    const nm=(S.tabNames[t]||'').trim();
-    b.className='tab'+(t===S.tab?' active':'')+(S.tracks.length<=t*PER_TAB?' dim':'')+(nm?' named':'');
+    const nm=getTabName(t);
+    b.className='tab'+(t===S.tab?' active':'')+(S.view.length<=t*PER_TAB?' dim':'')+(nm?' named':'');
     b.dataset.tab=t;
     if(nm){
       const n=document.createElement('span'); n.className='tn'; n.textContent=String(t+1);
       const x=document.createElement('span'); x.className='nm'; x.textContent=nm;
       b.append(n,x);
     } else b.textContent=String(t+1);
-    if(S.playingIdx>=0&&tabOf(S.playingIdx)===t){ const d=document.createElement('i'); d.className='dot'; b.appendChild(d); }
+    if(S.playingIdx>=0&&tabOfIdx(S.playingIdx)===t){ const d=document.createElement('i'); d.className='dot'; b.appendChild(d); }
     b.onclick=()=>{
       if(S.edit){ openTabName(t); return; }       // i redigeringsläge: döp fliken
       S.tab=t; LS.set('sb_tab',t);
@@ -651,15 +840,17 @@ function renderTabs(){
 function renderGrid(){
   const g=$('grid'); g.innerHTML='';
   for(let k=0;k<PER_TAB;k++){
-    const i=S.tab*PER_TAB+k, tr=S.tracks[i];
+    const i=S.view[S.tab*PER_TAB+k], tr=(i==null)?null:S.tracks[i];
     const b=document.createElement('button');
-    b.className='pad'+(tr?'':' empty'); b.dataset.idx=i;
+    b.className='pad'+(tr?'':' empty'); b.dataset.idx=tr?i:-1;
     if(tr){
       const n=document.createElement('span'); n.className='n'; n.textContent='#'+(i+1);
       const t=document.createElement('span'); t.className='t'; t.textContent=tr.name;
       const a=document.createElement('span'); a.className='a'; a.textContent=tr.artist;
       const eq=document.createElement('span'); eq.className='eq'; eq.innerHTML='<i></i><i></i><i></i><i></i>';
       b.append(n,t,a,eq);
+      const td=tagDef(S.tags[tr.uri]);
+      if(td){ const g2=document.createElement('span'); g2.className='tg'; g2.textContent=td.l.toUpperCase(); g2.style.background=td.c; b.appendChild(g2); }
       if(S.cues[tr.uri]){ const c=document.createElement('span'); c.className='c'; c.textContent='▶ '+fmtMs(S.cues[tr.uri]); b.appendChild(c); }
       b.onclick=()=>onPad(i);
     }
@@ -676,27 +867,14 @@ function refresh(){
     p.classList.toggle('next',i===S.nextIdx&&i!==S.playingIdx);
   });
   const nt=S.tracks[S.nextIdx];
-  $('nextLbl').textContent=nt?('Nästa: '+nt.name):'Alla spelade';
+  $('nextLbl').textContent=nt?('Nästa: '+nt.name):(S.view.length?'Alla spelade':'Inga låtar');
   $('hdr').classList.toggle('live',S.playingIdx>=0);
+  const pt=S.playingIdx>=0?tabOfIdx(S.playingIdx):-1;
   document.querySelectorAll('.tab').forEach(b=>{
-    const t=+b.dataset.tab, has=S.playingIdx>=0&&tabOf(S.playingIdx)===t, dot=b.querySelector('.dot');
+    const t=+b.dataset.tab, has=pt===t, dot=b.querySelector('.dot');
     if(has&&!dot){ const d=document.createElement('i'); d.className='dot'; b.appendChild(d); }
     if(!has&&dot) dot.remove();
   });
-}
-function openTabName(t){
-  S.tabEdit=t;
-  $('tTitle').textContent='Namn på flik '+(t+1);
-  $('tIn').value=S.tabNames[t]||'';
-  $('dTab').showModal();
-  setTimeout(()=>{ try{ $('tIn').focus(); $('tIn').select(); }catch(e){} },50);
-}
-function tabNameSave(){
-  const t=S.tabEdit; if(t<0) return;
-  S.tabNames[t]=$('tIn').value.trim().slice(0,24);
-  for(let k=0;k<TABS;k++) if(typeof S.tabNames[k]!=='string') S.tabNames[k]='';
-  LS.set('sb_tabnames',S.tabNames);
-  $('dTab').close(); renderTabs(); refresh();
 }
 function updateLoginState(){
   const el=$('loginState');
@@ -708,31 +886,35 @@ function updateLoginState(){
 $('bPlay').onclick=playNext;
 $('bStop').onclick=stopNow;
 $('bFade').onclick=fadeStop;
-$('bReset').onclick=()=>{ resetTab(); toast('Alla låtar i flik '+(S.tab+1)+' är gröna'); };
+$('bReset').onclick=()=>{ resetTab(); toast('Alla låtar på flik '+(S.tab+1)+' är gröna'); };
 $('bCue').onclick=setCueHere;
-$('bEdit').onclick=()=>{ S.edit=!S.edit; document.body.classList.toggle('edit',S.edit); $('bEdit').classList.toggle('on',S.edit); toast(S.edit?'Redigera: tryck en låt för cue, tryck en flik för att döpa den':'Spelläge'); };
-$('bSet').onclick=()=>{ $('clientId').value=S.clientId; $('redir').textContent=REDIRECT; updateLoginState(); $('dSet').showModal(); };
+$('bEdit').onclick=()=>{
+  S.edit=!S.edit; document.body.classList.toggle('edit',S.edit); $('bEdit').classList.toggle('on',S.edit);
+  if(S.edit){ renderBrush(); toast('Redigera: välj vad en tryckning på en låt ska göra. Tryck en flik för att döpa den.'); }
+  else { computeView(); resetNext(); renderFilters(); renderTabs(); renderGrid(); toast('Spelläge'); }
+};
+$('bSet').onclick=()=>{ $('clientId').value=S.clientId; $('redir').textContent=REDIRECT; updateLoginState(); renderSaved(); $('dSet').showModal(); };
 $('bClose').onclick=()=>$('dSet').close();
 $('bLogin').onclick=login;
 $('bLogout').onclick=logout;
 $('bPl').onclick=loadMyPlaylists;
 $('bLoad').onclick=loadPlaylist;
 $('bDev').onclick=loadDevices;
+$('savedSel').onchange=e=>switchSaved(e.target.value);
 $('devSel').onchange=e=>{ S.deviceId=e.target.value; LS.set('sb_device',S.deviceId); };
 $('plSel').onchange=()=>{ $('plIn').value=''; };
-$('bExp').onclick=()=>{ $('cueBox').value=JSON.stringify({cues:S.cues,tabs:S.tabNames}); $('cueBox').select(); toast('Kopiera texten och spara den någonstans'); };
+$('bExp').onclick=()=>{ $('cueBox').value=JSON.stringify({v:2,cues:S.cues,tags:S.tags,tabs:S.tabNames}); $('cueBox').select(); toast('Kopiera texten och spara den någonstans'); };
 $('bImp').onclick=()=>{
   try{
     const o=JSON.parse($('cueBox').value);
     if(!o||typeof o!=='object'||Array.isArray(o)) throw new Error('fel format');
-    const cues=(o.cues&&typeof o.cues==='object')?o.cues:o;          // stöder även gammalt format
+    const cues=(o.cues&&typeof o.cues==='object')?o.cues:o;          // stöder även äldsta formatet (bara cues)
     let n=0; for(const k in cues){ if(typeof cues[k]==='number'&&cues[k]>=0){ S.cues[k]=cues[k]; n++; } }
-    LS.set('sb_cues',S.cues);
-    if(Array.isArray(o.tabs)){
-      S.tabNames=Array.from({length:TABS},(_,k)=>typeof o.tabs[k]==='string'?o.tabs[k].slice(0,24):'');
-      LS.set('sb_tabnames',S.tabNames);
-    }
-    renderTabs(); renderGrid(); toast(n+' cue-punkter importerade'+(Array.isArray(o.tabs)?' + flik-namn':''));
+    let nt=0;
+    if(o.tags&&typeof o.tags==='object'){ for(const k in o.tags){ if(tagDef(o.tags[k])){ S.tags[k]=o.tags[k]; nt++; } } }
+    if(o.tabs) S.tabNames=Object.assign(S.tabNames,normTabNames(o.tabs));
+    persist(); computeView(); resetNext(); renderFilters(); renderTabs(); renderGrid();
+    toast(n+' cue-punkter'+(nt?', '+nt+' flaggor':'')+(o.tabs?' och flik-namn':'')+' importerade');
   }catch(e){ toast('Kunde inte läsa importen: '+e.message,true); }
 };
 $('tSave').onclick=tabNameSave;
@@ -762,7 +944,8 @@ setInterval(()=>{
 /* ---------- Start ---------- */
 (async function init(){
   $('redir').textContent=REDIRECT;
-  resetNext(); renderTabs(); renderGrid();
+  if(!['alla','none'].concat(TAGS.map(t=>t.k)).includes(S.filter)) S.filter='alla';
+  computeView(); resetNext(); renderFilters(); renderTabs(); renderGrid(); renderSaved();
   if(S.tracks.length) setNow(S.plName||'Spellista laddad',S.tracks.length+' låtar · redo');
   await handleRedirect();
   updateLoginState();
