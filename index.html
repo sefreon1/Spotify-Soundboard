@@ -408,7 +408,7 @@ function handleErr(e){
   console.error(e);
   if(e.status===401||e.message==='NO_TOKEN'){ toast('Logga in igen via ⚙',true); updateLoginState(); }
   else if(e.reason==='PREMIUM_REQUIRED'){ toast('Spotify Premium krävs för uppspelningsstyrning',true); }
-  else if(e.status===404||e.reason==='NO_ACTIVE_DEVICE'){ toast('Ingen aktiv enhet. Öppna Spotify på plattan, spela något en sekund och välj enhet i ⚙.',true); }
+  else if(e.status===404||e.reason==='NO_ACTIVE_DEVICE'){ toast('Spotify hittar ingen spelare ('+(e.message||'404')+'). Öppna Spotify-programmet på enheten, spela en låt en sekund, tryck Uppdatera i ⚙ och välj enheten igen.',true); }
   else if(e.status===429){ toast('För många anrop till Spotify, vänta '+(e.retryAfter||'en stund')+' s',true); }
   else if(e.status===403){ toast('Spotify nekade (403). Är kontot tillagt under Users and Access i Spotify-appen? '+e.message,true); }
   else toast('Fel: '+e.message,true);
@@ -483,6 +483,24 @@ function resetTab(){
 }
 
 /* ---------- Uppspelning ---------- */
+// Spelar upp; om Spotify svarar 404 (enheten sover/okänd) väcks den genom att flytta uppspelning dit, sedan försöker vi igen en gång.
+async function playOnDevice(body){
+  try{ await api('PUT','/me/player/play'+devQ(true),body); return; }
+  catch(e){
+    if(e.status!==404) throw e;
+    let id=S.deviceId;
+    if(!id){
+      const d=await api('GET','/me/player/devices');
+      const dev=(d&&d.devices||[])[0];
+      if(!dev) throw e;
+      id=dev.id; S.deviceId=id; LS.set('sb_device',id);
+      const o=[...$('devSel').options].find(x=>x.value===id); if(o) $('devSel').value=id;
+    }
+    try{ await api('PUT','/me/player',{device_ids:[id],play:false}); }catch(e2){}
+    await sleep(800);
+    await api('PUT','/me/player/play'+devQ(true),body);
+  }
+}
 function onPad(i){
   if(S.edit){ openCue(i); return; }
   if(i===S.playingIdx){ stopNow(); return; }   // spelas -> stoppa
@@ -501,7 +519,7 @@ async function playIndex(i){
   refresh();
   const t0=performance.now();
   try{
-    await api('PUT','/me/player/play'+devQ(true),{uris:[tr.uri],position_ms:cue});
+    await playOnDevice({uris:[tr.uri],position_ms:cue});
     toast('▶ '+Math.round(performance.now()-t0)+' ms');
     startPoll();
     clearTimeout(S.endTimer);
