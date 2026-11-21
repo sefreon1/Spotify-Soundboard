@@ -366,7 +366,7 @@ const S={
   deviceId:LS.get('sb_device',''),
   tab:LS.get('sb_tab',0), tabEdit:-1,
   playingIdx:-1, playingUri:'', nextIdx:-1, played:new Set(),
-  startPos:0, startedAt:0, durs:{}, seq:0, restoreVol:null, muteVol:null,
+  startPos:0, startedAt:0, durs:{}, seq:0, restoreVol:null, muteVol:null, muteSeq:0,
   edit:false, pollTimer:null, endTimer:null, cueIdx:-1
 };
 
@@ -615,11 +615,15 @@ async function restoreVolume(){
 async function unmute(){
   if(S.muteVol==null) return;
   const v=S.muteVol; S.muteVol=null;
-  try{ await api('PUT','/me/player/volume?volume_percent='+v+devQ(false)); }catch(e){}
+  for(let n=0;n<3;n++){
+    try{ await api('PUT','/me/player/volume?volume_percent='+v+devQ(false)); return; }
+    catch(e){ await sleep(300); }
+  }
+  toast('Kunde inte höja volymen igen – justera i Spotify',true);
 }
 // Spelar upp; om Spotify svarar 404 (enheten sover/okänd) väcks den genom att flytta uppspelning dit, sedan försöker vi igen en gång.
 async function playOnDevice(body){
-  await unmute(); await restoreVolume();        // volymen ska vara tillbaka efter en fade innan nästa låt startar
+  await restoreVolume();                         // volymen ska vara tillbaka efter en fade innan nästa låt startar
   try{ await api('PUT','/me/player/play'+devQ(true),body); return; }
   catch(e){
     if(e.status!==404) throw e;
@@ -656,21 +660,16 @@ async function playIndex(i){
   refresh();
   const t0=performance.now(), mySeq=S.seq;
   try{
-    let muted=false;
-    if(cue>0){                                   // dämpa ljudet så att ev. start från början inte hörs
-      await restoreVolume(); await unmute();
-      try{
-        const p0=await api('GET','/me/player'), d0=p0&&p0.device;
-        if(mySeq!==S.seq) return;
-        if(d0&&d0.supports_volume!==false&&d0.volume_percent>0){
-          S.muteVol=d0.volume_percent;
-          await api('PUT','/me/player/volume?volume_percent=0'+devQ(false));
-          muted=true;
-        }
-      }catch(e){ await unmute(); }
+    await unmute();
+    const muted=false;
+    // Med spellistan som kontext respekterar Spotify startpositionen bättre än med enbart en låt
+    let body={uris:[tr.uri],position_ms:cue};
+    if(cue>0&&S.plId) body={context_uri:'spotify:playlist:'+S.plId,offset:{uri:tr.uri},position_ms:cue};
+    try{ await playOnDevice(body); }
+    catch(e){
+      if(body.context_uri&&e.status!==404&&e.status!==401&&e.status!==429) await playOnDevice({uris:[tr.uri],position_ms:cue});
+      else throw e;
     }
-    try{ await playOnDevice({uris:[tr.uri],position_ms:cue}); }
-    catch(e){ await unmute(); throw e; }
     toast('▶ '+Math.round(performance.now()-t0)+' ms');
     if(cue>0) ensureCue(i,cue,mySeq,muted);
     startPoll();
@@ -683,27 +682,21 @@ async function playIndex(i){
   }
 }
 // Spotify ska starta på position_ms, men vissa spelare ignorerar den. Kolla efter en kort stund och hoppa till cue om låten startade för tidigt.
-async function ensureCue(i,cue,seq,muted){
-  let jumped=false, first=null;
+async function ensureCue(i,cue,seq){
   try{
-    for(let n=0;n<10;n++){
-      await sleep(n===0?250:200);
+    for(let n=0;n<4;n++){
+      await sleep(n===0?150:250);
       if(seq!==S.seq||S.playingIdx!==i) return;
       const p=await api('GET','/me/player');
-      if(seq!==S.seq||S.playingIdx!==i) return;
-      if(!p||!p.item||!p.is_playing){ if(n>=6) break; continue; }
+      if(seq!==S.seq||S.playingIdx!==i||!p||!p.item||!p.is_playing) continue;
       const pr=p.progress_ms||0;
-      if(first==null) first=pr;
-      if(pr>=cue-700) break;                              // är på cue -> klart
-      if(!jumped||n%3===0){                               // för tidigt -> hoppa till cue
-        await api('PUT','/me/player/seek?position_ms='+cue+devQ(false));
-        S.startPos=cue; S.startedAt=performance.now();
-        jumped=true;
-      }
+      if(pr>=cue-700) return;                              // startade rätt
+      await api('PUT','/me/player/seek?position_ms='+cue+devQ(false));
+      S.startPos=cue; S.startedAt=performance.now();
+      toast('Spotify ignorerade startpositionen (startade från '+fmtS(pr)+'), hoppade till '+fmtMs(cue));
+      return;
     }
-    if(jumped&&first!=null&&first<cue-1500) toast('Spotify startade från '+fmtS(first)+', hoppade till '+fmtMs(cue));
   }catch(e){}
-  finally{ if(muted&&seq===S.seq) await unmute(); }
 }
 function playNext(){
   if(S.nextIdx<0){ toast('Alla låtar här är spelade. Tryck ↺ Alla gröna.',true); return; }
@@ -774,7 +767,7 @@ async function pollOnce(){
     const same=p.item.uri===S.playingUri||(p.item.linked_from&&p.item.linked_from.uri===S.playingUri);
     if(!same){
       const idx=S.tracks.findIndex(t=>t.uri===p.item.uri);
-      if(idx>=0){                                     // någon startade en annan låt från listan i Spotify
+      if(idx>=0&&!nearEnd){                           // någon startade en annan låt från listan i Spotify
         S.played.add(S.playingIdx); S.playingIdx=idx; S.playingUri=p.item.uri; S.played.delete(idx); refresh();
       } else if(nearEnd){                             // vår låt är slut och Spotify gick vidare på egen hand
         markEnded(); stopPoll();
