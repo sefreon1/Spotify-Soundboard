@@ -790,10 +790,17 @@ async function pollOnce(){
 async function setCueHere(){
   try{
     const p=await api('GET','/me/player');
-    if(!p||!p.item){ toast('Inget spelas just nu',true); return; }
-    S.cues[p.item.uri]=p.progress_ms; persist();
+    if(!p||!p.item){ toast('Inget spelas just nu – starta en låt först',true); return; }
+    // nyckeln är knappens låt (inte Spotifys ev. omlänkade id), så cue alltid hittas igen
+    let tr=S.playingIdx>=0?S.tracks[S.playingIdx]:null;
+    if(!tr||(p.item.uri!==tr.uri&&!(p.item.linked_from&&p.item.linked_from.uri===tr.uri))){
+      tr=S.tracks.find(t=>t.uri===p.item.uri||(p.item.linked_from&&t.uri===p.item.linked_from.uri))||tr;
+    }
+    if(!tr){ toast('Låten som spelas finns inte i den här spellistan',true); return; }
+    const pos=Math.max(0,p.progress_ms||0);
+    S.cues[tr.uri]=pos; persist();
     renderGrid(); refresh();
-    toast('Cue satt: '+fmtMs(p.progress_ms)+' · '+p.item.name);
+    toast('Cue satt: '+fmtMs(pos)+' · '+tr.name);
   }catch(e){ handleErr(e); }
 }
 function openCue(i){
