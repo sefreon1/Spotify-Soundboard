@@ -649,10 +649,11 @@ async function playIndex(i){
   S.nextIdx=computeNext(i,curSlice(),S.played,S.playingIdx);
   setNow(tr.name,tr.artist+(cue?' · start '+fmtMs(cue):''));
   refresh();
-  const t0=performance.now();
+  const t0=performance.now(), mySeq=S.seq;
   try{
     await playOnDevice({uris:[tr.uri],position_ms:cue});
     toast('▶ '+Math.round(performance.now()-t0)+' ms');
+    if(cue>0) ensureCue(i,cue,mySeq);
     startPoll();
     clearTimeout(S.endTimer);
     const d=durOf(i);
@@ -661,6 +662,19 @@ async function playIndex(i){
     if(S.playingIdx===i){ S.playingIdx=-1; S.playingUri=''; resetNext(); refresh(); }
     handleErr(e);
   }
+}
+// Spotify ska starta på position_ms, men vissa spelare ignorerar den. Kolla efter en kort stund och hoppa till cue om låten startade för tidigt.
+async function ensureCue(i,cue,seq){
+  try{
+    await sleep(700);
+    if(seq!==S.seq||S.playingIdx!==i) return;
+    const p=await api('GET','/me/player');
+    if(seq!==S.seq||S.playingIdx!==i||!p||!p.item||!p.is_playing) return;
+    if((p.progress_ms||0)>=cue-1500) return;            // startade rätt
+    await api('PUT','/me/player/seek?position_ms='+cue+devQ(false));
+    S.startPos=cue; S.startedAt=performance.now();
+    toast('Spotify startade från '+fmtS(p.progress_ms||0)+', hoppade till '+fmtMs(cue));
+  }catch(e){}
 }
 function playNext(){
   if(S.nextIdx<0){ toast('Alla låtar här är spelade. Tryck ↺ Alla gröna.',true); return; }
@@ -710,15 +724,39 @@ async function pollOnce(){
   if(document.hidden||S.playingIdx<0) return;
   const seq=S.seq;
   try{
-    const p=await api('GET','/me/player');
+    let p=await api('GET','/me/player');
     if(seq!==S.seq||S.playingIdx<0) return;           // något hände under tiden
-    if(!p||!p.item||!p.is_playing){ markEnded(); stopPoll(); return; }
-    if(p.item.uri!==S.playingUri){                    // vår låt är slut, Spotify gick vidare
-      markEnded(); stopPoll();
-      try{ await api('PUT','/me/player/pause'+devQ(true)); }catch(e){}
-      return;
+    const elapsed=S.startPos+(performance.now()-S.startedAt);
+    const d0=durOf(S.playingIdx);
+    const nearEnd=d0>0&&elapsed>=d0-4000;             // låten bör vara slut enligt längden
+    if(!p||!p.item||!p.is_playing){
+      if(!nearEnd){                                   // dubbelkolla innan vi tror att musiken tagit slut
+        await sleep(1500);
+        if(seq!==S.seq||S.playingIdx<0) return;
+        p=await api('GET','/me/player');
+        if(seq!==S.seq||S.playingIdx<0) return;
+      }
+      if(!p||!p.item||!p.is_playing){
+        if(!nearEnd) toast('Spotify slutade spela efter '+fmtS(elapsed)+' ('+(!p?'ingen uppspelning':(!p.item?'inget spår':'pausad'))+')',true);
+        markEnded(); stopPoll(); return;
+      }
     }
-    if(p.item.duration_ms) S.durs[p.item.uri]=p.item.duration_ms;
+    // Samma låt? Spotify kan rapportera en motsvarande version (relinking) med ett annat id: det är inte ett byte.
+    const same=p.item.uri===S.playingUri||(p.item.linked_from&&p.item.linked_from.uri===S.playingUri);
+    if(!same){
+      const idx=S.tracks.findIndex(t=>t.uri===p.item.uri);
+      if(idx>=0){                                     // någon startade en annan låt från listan i Spotify
+        S.played.add(S.playingIdx); S.playingIdx=idx; S.playingUri=p.item.uri; S.played.delete(idx); refresh();
+      } else if(nearEnd){                             // vår låt är slut och Spotify gick vidare på egen hand
+        markEnded(); stopPoll();
+        try{ await api('PUT','/me/player/pause'+devQ(true)); }catch(e){}
+        return;
+      } else {
+        S.playingUri=p.item.uri;                      // troligen en motsvarande version av samma låt: fortsätt spela
+      }
+    }
+    const tr=S.tracks[S.playingIdx];
+    if(tr&&p.item.duration_ms) S.durs[tr.uri]=p.item.duration_ms;
     S.startPos=p.progress_ms||0; S.startedAt=performance.now();
     clearTimeout(S.endTimer);
     const d=durOf(S.playingIdx);
